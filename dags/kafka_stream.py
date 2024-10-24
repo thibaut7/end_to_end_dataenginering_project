@@ -34,7 +34,13 @@ def get_data():
     return data
 
 def stream_data():
-    res = get_data()
-    return json.dumps(res, indent=3)
+    from kafka import KafkaProducer
 
-print(stream_data())
+    res = get_data()
+    res = format_data(res)
+    #return json.dumps(res, indent=3)
+
+    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
+    producer.send('users_created', json.dumps(res).encode('utf-8'))
+
+stream_data()
