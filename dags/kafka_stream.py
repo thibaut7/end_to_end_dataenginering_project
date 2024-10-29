@@ -3,11 +3,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 import requests
 import json
-""" default_args = {
-    'owner': 'airscholar',
-    'start_date': datetime(2)
-}
-print('thi') """
+
 
 def get_data():
     url = 'https://randomuser.me/api/'
@@ -34,13 +30,18 @@ def get_data():
     return data
 
 def stream_data():
+    import json
     from kafka import KafkaProducer
 
     res = get_data()
-    res = format_data(res)
     #return json.dumps(res, indent=3)
 
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
-    producer.send('users_created', json.dumps(res).encode('utf-8'))
+    
+    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=10000)
+    try:
+        producer.send('users_created', json.dumps(res).encode('utf-8'))
+        producer.flush()  # Ensure all messages are sent
+    except Exception as e:
+        print(f"Error sending data to Kafka: {e}")
 
-stream_data()
+print(stream_data())
