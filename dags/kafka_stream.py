@@ -37,7 +37,7 @@ def stream_data():
     #return json.dumps(res, indent=3)
 
     
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=10000)
+    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
     try:
         producer.send('users_created', json.dumps(res).encode('utf-8'))
         producer.flush()  # Ensure all messages are sent
