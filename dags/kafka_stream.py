@@ -7,7 +7,7 @@ import json
 
 default_args ={
     'owner': 'thibaut7',
-    'start_date': datetime(2024, 11, 1, 16, 37, 00)
+    'start_date': datetime(2024, 11, 8, 18, 3, 00)
 }
 
 def get_data():
@@ -54,13 +54,14 @@ def stream_data():
             logging.error('An error occured: {e}')
             continue
 
-    with DAG('user_automation',
-             default_args=default_args,
-             schedule_interval='@daily',
-             catchup=False) as dag:
+with DAG('user_automation',
+        default_args=default_args,
+        schedule='@hourly',
+        catchup=False) as dag:
         
-        streaming_task = PythonOperator(
-            task_id='stream_data_from_api',
-            python_callable=stream_data
+    streaming_task = PythonOperator(
+        task_id='stream_data_from_api',
+        python_callable=stream_data
         )
+
 
