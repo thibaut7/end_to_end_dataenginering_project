@@ -190,12 +190,13 @@ services:
         max-size: 10m
         max-file: "3"
     volumes:
-      - ./dag:/opt/airflow/dags
+      - ./dags:/opt/airflow/dags
       - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
+      - ./requirements/requirements.txt:/opt/airflow/requirements.txt
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD-SHELL", "[ -f /opt/airflow/airflow-webserver.pid ]"]
+      test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
       interval: 30s
       timeout: 30s
       retries: 3
@@ -209,9 +210,9 @@ services:
       webserver:
         condition: service_healthy
     volumes:
-       - ./dag:/opt/airflow/dags
+       - ./dags:/opt/airflow/dags
        - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
-       - ./requirements.txt:/opt/airflow/requirements.txt
+       - ./requirements/requirements.txt:/opt/airflow/requirements.txt
     environment:
       - LOAD_EX=n
       - EXECUTOR=Sequential

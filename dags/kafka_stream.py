@@ -1,9 +1,14 @@
 from datetime import datetime
+import uuid
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 import requests
 import json
 
+default_args ={
+    'owner': 'thibaut7',
+    'start_date': datetime(2024, 11, 1, 16, 37, 00)
+}
 
 def get_data():
     url = 'https://randomuser.me/api/'
@@ -32,16 +37,30 @@ def get_data():
 def stream_data():
     import json
     from kafka import KafkaProducer
+    import time
+    import logging
 
-    res = get_data()
-    #return json.dumps(res, indent=3)
-
+    producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
+    current_time = time.time()
     
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
-    try:
-        producer.send('users_created', json.dumps(res).encode('utf-8'))
-        producer.flush()  # Ensure all messages are sent
-    except Exception as e:
-        print(f"Error sending data to Kafka: {e}")
+    while True:
+        if time.time() > current_time + 60:
+            break
+        try:
+            res = get_data()
+            producer.send('users_created', json.dumps(res).encode('utf-8'))
+            producer.flush()  # Ensure all messages are sent
+        except Exception as e:
+            logging.error('An error occured: {e}')
+            continue
 
-print(stream_data())
+    with DAG('user_automation',
+             default_args=default_args,
+             schedule_interval='@daily',
+             catchup=False) as dag:
+        
+        streaming_task = PythonOperator(
+            task_id='stream_data_from_api',
+            python_callable=stream_data
+        )
+
